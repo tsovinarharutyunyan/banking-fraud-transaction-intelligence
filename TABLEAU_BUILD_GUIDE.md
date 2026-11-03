@@ -1,76 +1,25 @@
-# Tableau Dashboard Blueprint — Banking Fraud & Transaction Intelligence
+# Tableau dashboards — published workbook
 
-## Data connection
+[Explore the three interactive dashboards on Tableau Public](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/03-TransactionIntelligence)
 
-Connect Tableau Public/Desktop to `tableau/transactions_dashboard.csv` after running the Python pipeline. `day` is a **simulation day**, `hour` is a **simulation hour**, and `amount` is in **dataset units**, not USD. The fact CSV already contains the fields needed for all three dashboards. Optional `accounts.csv` and `transaction_types.csv` can be related by account/type if desired; avoid many-to-many row duplication.
+This project uses the **first 300,000 records** of the synthetic PaySim dataset, not a random sample. Transaction amounts are in dataset units. Time is simulated.
 
-## Calculated fields
+## 01 — Executive Overview
+Five KPI tiles: total transactions, transaction volume, labeled fraud transactions, labeled fraud rate, and average amount. Charts compare transaction counts, labeled fraud, and amount by transaction type.
 
-Create:
+## 02 — Fraud & Risk Monitoring
+KPIs: rule-alert transactions, rule-alert rate, and labeled fraud transactions. Charts: alerts by type, alert activity by simulated hour and type, transactions by risk tier, and risk-score distribution.
 
-- `Fraud Rate` = `SUM([isFraud]) / COUNT([transaction_id])`
-- `Alert Rate` = `SUM([rule_alert]) / COUNT([transaction_id])`
-- `Fraudulent Volume` = `SUM(IF [isFraud] = 1 THEN [amount] ELSE 0 END)`
-- `Alerted Volume` = `SUM(IF [rule_alert] = 1 THEN [amount] ELSE 0 END)`
-- `Avg Transaction` = `AVG([amount])`
-- `Alert Precision` = `SUM(IF [rule_alert]=1 AND [isFraud]=1 THEN 1 ELSE 0 END) / MAX(1,SUM([rule_alert]))`
-- `Alert Recall` = `SUM(IF [rule_alert]=1 AND [isFraud]=1 THEN 1 ELSE 0 END) / MAX(1,SUM([isFraud]))`
+## 03 — Transaction Intelligence
+Charts: transaction mix by type (pie), amount versus risk score (scatter), and amount distribution (histogram filtered to amounts ≤ 1,000,000 dataset units).
 
-Display rates as percentages. Note Tableau formula syntax may need exact field typing adjustments.
+## Interpretation
+Select a transaction type in a dashboard to filter related views. The PaySim `isFraud` field is a simulated label; `isFlaggedFraud` is PaySim's existing flag; `rule_alert` is this project's separate illustrative alert. An alert is **not** confirmed fraud. The alert rule has about 48.1% recall in this extract, with a 37.33% alert rate, and is not operationally validated.
 
-## Dashboard 1: Executive Transaction Overview (1200 × 800)
+## Rebuild
+1. Download PaySim using the dataset link in `README.md`.
+2. Run `Banking_Fraud_Intelligence.ipynb` from the repository root or run `python src/analysis.py --input data/PS_20174392719_1491204439457_log.csv --limit 300000`.
+3. Connect Tableau to the generated `tableau/transactions_dashboard.csv`.
+4. Refer to the published Tableau workbook and the three PNG previews for the final dashboard layout.
 
-**Header:** Banking Transaction Intelligence | Simulated Data
-
-**KPI cards:** Transactions = COUNT([transaction_id]); Total Volume = SUM([amount]); Average Transaction = AVG([amount]); Labeled Fraud = SUM([isFraud]); Labeled Fraud Rate = calculated field.
-
-**Sheet A:** line chart: Columns `day`, Rows COUNT(transaction_id). `day` is discrete simulation day.
-
-**Sheet B:** horizontal bar: Rows `type`, Columns SUM(amount); sort descending.
-
-**Sheet C:** bar: Rows `amount_band`, Columns COUNT(transaction_id); sort bins logically.
-
-**Sheet D:** transaction-type breakdown table: type, count, volume, labeled fraud, rate.
-
-**Filters:** type, day, amount_band. Apply to all relevant worksheets using this source.
-
-## Dashboard 2: Fraud & Risk Monitoring (1200 × 800)
-
-**KPI cards:** Rule Alerts, Alert Rate, Labeled Fraud, Alert Precision, Alert Recall.
-
-**Sheet A:** heatmap: Columns hour, Rows day, Color SUM(rule_alert); show simulation time explicitly.
-
-**Sheet B:** bar: risk_tier vs COUNT(transaction_id); ordered Low, Medium, High.
-
-**Sheet C:** side-by-side bars: type vs SUM(rule_alert) and SUM(isFraud). Make clear these are different quantities.
-
-**Sheet D:** alert review table: transaction_id, type, amount, risk_score, risk_tier, rule_alert, isFraud. Filter rule_alert = 1 by default.
-
-**Filters:** day, type, risk_tier, rule_alert. Use consistent dashboard actions.
-
-## Dashboard 3: Account & Transaction Intelligence (1200 × 800)
-
-**KPI cards:** Distinct Origin Accounts = COUNTD([nameOrig]); Distinct Destination Accounts = COUNTD([nameDest]); Average Transaction; Alerted Volume.
-
-**Sheet A:** top 15 origin accounts by SUM(amount), sorted descending.
-
-**Sheet B:** scatter: each nameOrig, x COUNT(transaction_id), y SUM(amount), size SUM(rule_alert). Beware overplotting; filter top accounts.
-
-**Sheet C:** transaction distribution by amount_band and type, stacked bars.
-
-**Sheet D:** detail table: transaction_id, nameOrig, nameDest, type, amount, day, hour, risk_tier.
-
-**Filters:** day, type, risk_tier. Add highlight action from top-account bar to transaction detail.
-
-## Visual quality checklist
-
-- Use a restrained navy, white and teal palette; reserve amber/red for flagged-risk indicators.
-- Keep 4–5 KPI cards on top; 2-column chart grid below; filter rail on right.
-- Provide informative tooltips and source note: “Synthetic PaySim or illustrative demo; no real customer data.”
-- Use dashboard navigation buttons between the three views.
-- Add methodology and definitions in tooltip/footer; do not call alerts proven fraud.
-- Validate all KPI totals against `outputs/summary.json` and `tableau/daily_metrics.csv`.
-
-## Publishing
-
-Tableau Public → connect to CSV → create sheets → assemble dashboards → File → Save to Tableau Public. Publish only synthetic data and never personal customer information. Add your actual Tableau Public link to README after publishing.
+The original exploratory design notes have been replaced by this summary of the finished workbook.
