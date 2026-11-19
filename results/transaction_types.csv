@@ -1,0 +1,6 @@
+type,type_group
+CASH_IN,Other
+CASH_OUT,Movement
+DEBIT,Other
+PAYMENT,Other
+TRANSFER,Movement
