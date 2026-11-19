@@ -1,6 +1,6 @@
 # Tableau dashboards — published workbook
 
-[Explore the three interactive dashboards on Tableau Public](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/03-TransactionIntelligence)
+[Explore the three interactive dashboards on Tableau Public](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/01-ExecutiveOverview)
 
 This project uses the **first 300,000 records** of the synthetic PaySim dataset, not a random sample. Transaction amounts are in dataset units. Time is simulated.
 
@@ -15,6 +15,9 @@ Charts: transaction mix by type (pie), amount versus risk score (scatter), and a
 
 ## Interpretation
 Select a transaction type in a dashboard to filter related views. The PaySim `isFraud` field is a simulated label; `isFlaggedFraud` is PaySim's existing flag; `rule_alert` is this project's separate illustrative alert. An alert is **not** confirmed fraud. The alert rule has about 48.1% recall in this extract, with a 37.33% alert rate, and is not operationally validated.
+
+## Export and source consistency
+The current Tableau dashboard uses the main `tableau/transactions_dashboard.csv` extract. The other five CSV exports are supplementary summaries and dimension tables; they are **not required as separate data sources** for these three pages. When updating the packaged workbook, edit the existing connection rather than replacing worksheets.
 
 ## Rebuild
 1. Download PaySim using the dataset link in `README.md`.
