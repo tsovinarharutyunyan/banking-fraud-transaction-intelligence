@@ -111,12 +111,13 @@ The published dashboards use the transaction-level export **`tableau/transaction
 | [`src/analysis.py`](src/analysis.py) | Optional reusable command-line pipeline |
 | [`sql/`](sql/) | Seven example SQL analyses for the command-line pipeline |
 | [`requirements.txt`](requirements.txt) | Python dependencies |
+| [`results/`](results/) | Verified small CSV summaries from the 300,000-row PaySim extract |
 | [`RUN_ME_FIRST.md`](RUN_ME_FIRST.md) | Local setup steps |
 | [`TABLEAU_BUILD_GUIDE.md`](TABLEAU_BUILD_GUIDE.md) | Description of the finished Tableau dashboards |
 | `executive-overview.png`, `fraud-risk-monitoring.png`, `transaction-intelligence.png` | Dashboard preview images |
 | `data/`, `tableau/`, `outputs/` | Local input and generated files; not committed to Git |
 
-The notebook writes six local Tableau CSVs: `transactions_dashboard.csv`, `type_metrics.csv`, `daily_metrics.csv`, `risk_heatmap.csv`, `accounts.csv`, and `transaction_types.csv`. It also creates a local SQLite summary. The small, additional CSVs are prepared outputs, **not independent data sources for the published dashboards**.
+The notebook writes six local Tableau CSVs: `transactions_dashboard.csv`, `type_metrics.csv`, `daily_metrics.csv`, `risk_heatmap.csv`, `accounts.csv`, and `transaction_types.csv`. It also creates a local SQLite summary. The small, additional CSVs are prepared outputs, **not independent data sources for the published dashboards**. Selected compact summaries are committed under [`results/`](results/) so the findings can be checked without downloading the full PaySim dataset.
 
 ## Run locally
 
