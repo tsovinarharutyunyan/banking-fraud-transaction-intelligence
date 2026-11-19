@@ -2,104 +2,147 @@
 
 **Python · Pandas · SQL (SQLite) · Tableau**
 
-I built this project to explore how transaction data can support day-to-day fraud and risk monitoring. The focus is on understanding transaction patterns, testing simple and explainable alert rules, and presenting the findings in dashboards that are easy to investigate.
+[**Explore the live Tableau dashboards**](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/01-ExecutiveOverview)
 
-**[Explore the interactive Tableau dashboards](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/03-TransactionIntelligence)**
+A transaction-monitoring portfolio project built to answer two questions: **Where do simulated fraud labels appear in transaction activity?** And **how useful are simple, explainable rules for identifying transactions that need review?**
 
-## The data
+I explored transaction patterns with Python, checked summaries with SQL, tested a transparent risk-scoring approach, and built three Tableau dashboards to communicate the results. A central part of the analysis is measuring the **workload created by false alerts**, rather than presenting an alert as confirmed fraud.
 
-The analysis uses **300,000 transactions** from the beginning of the [PaySim synthetic financial transactions dataset](https://www.kaggle.com/datasets/ealaxi/paysim1). PaySim simulates mobile-money activity; it does not contain real bank customers or transactions.
+## Data and scope
 
-I used a limited extract to keep the notebook and Tableau workbook manageable on a laptop. **This is the first 300,000 rows, not a random or representative sample.** All figures below describe this extract only. Transaction amounts are reported in *dataset units*, not a claimed real-world currency.
+- **Source:** [PaySim — synthetic financial transactions](https://www.kaggle.com/datasets/ealaxi/paysim1).
+- **Sample:** The **first 300,000 rows** of the supplied CSV, not a random sample of the full dataset.
+- **Privacy:** Simulated account IDs and transactions; **no actual customer or bank data**.
+- **Amounts:** PaySim dataset units; no real-world currency is assumed.
+- **Time:** `step` is a **simulation hour**. Derived day and hour values do not represent verified calendar timestamps.
 
-## What I found
+## Results at a glance
 
-| Metric | Result |
+| Measure | Result |
 |---|---:|
-| Transactions analyzed | 300,000 |
-| Total transaction amount | 52.85B dataset units |
-| Transactions labeled as fraud | 181 |
-| Labeled fraud rate | 0.0603% |
-| Rule-based alerts | 112,004 |
-| Alert rate | 37.33% |
+| Transactions analyzed | **300,000** |
+| Total transaction amount | **52.85 billion** dataset units |
+| Transactions labeled as fraud | **181** |
+| Labeled fraud rate | **0.0603%** |
+| Transactions flagged by my rules | **112,004** |
+| Alert rate | **37.33%** |
+| Labeled fraud cases flagged | **87** |
+| Labeled fraud cases missed | **94** |
+| Recall | **48.07%** |
+| Alert precision | **0.078%** |
+| Alerts without a fraud label | **111,917** |
 
-Fraud labels appear only in **CASH_OUT** (93) and **TRANSFER** (88) transactions in this extract. These are observations from simulated data, not evidence that other transaction types are fraud-free in real banking.
+*Figures come from the included, executed notebook for this specific PaySim extract.*
 
-The alert rules flagged **87 of the 181** labeled fraud cases, or approximately **48.1% recall**. They also flagged **111,917 transactions without a fraud label**. This is an intentionally simple monitoring example, **not a validated fraud-detection model**. Its alert volume would be far too broad to treat as an operationally ready fraud queue.
+### Finding 1 — Count and rate tell different stories
 
-## Interactive dashboards
+| Transaction type | Transactions | Labeled fraud | Labeled fraud rate |
+|---|---:|---:|---:|
+| CASH_OUT | 105,401 | 93 | 0.0882% |
+| TRANSFER | 24,905 | 88 | 0.3533% |
+| CASH_IN | 63,408 | 0 | 0% |
+| PAYMENT | 104,056 | 0 | 0% |
+| DEBIT | 2,230 | 0 | 0% |
 
-The Tableau workbook contains three views:
+**CASH_OUT** contains slightly more labeled fraud cases than **TRANSFER** (93 versus 88), but the **TRANSFER** fraud-label rate is about **four times higher** in this extract. Looking only at fraud counts would obscure that difference.
 
-1. **Executive Overview** — transaction counts, total amount, fraud KPIs, and activity by transaction type.
-2. **Fraud & Risk Monitoring** — rule alerts, risk tiers, score distribution, and alert patterns by hour and transaction type.
-3. **Transaction Intelligence** — transaction mix, the relationship between amount and risk score, and the distribution of transaction amounts (with the histogram limited to amounts up to 1M).
+The zero counts in the other types are properties of this **synthetic sample**, not a claim that those payment types are safe in the real world.
 
-Charts can be selected to filter other views within each dashboard. The published workbook is available through the link above.
+### Finding 2 — High alert volume does not mean good detection
 
-### Dashboard previews
+I constructed an **illustrative rule-based score**, not a predictive model or bank policy:
 
-**01 — Executive Overview**
+| Indicator | Illustrative score |
+|---|---:|
+| Amount at least 100,000 dataset units | +2 |
+| Amount greater than sender's recorded pre-transaction balance | +1 |
+| Transaction type is TRANSFER or CASH_OUT | +1 |
+| **Alert threshold** | **Score ≥ 3** |
+
+The rule uses transaction information available before or at the transaction, **not `isFraud`**, to calculate risk. The synthetic fraud label is used **only to evaluate** the alerts.
+
+**Comparison with the dataset labels:**
+
+| | No rule alert | Rule alert |
+|---|---:|---:|
+| No fraud label | 187,902 | 111,917 |
+| Fraud label | 94 | 87 |
+
+The rules flagged **37.33% of all transactions**, yet caught fewer than half of the 181 labeled fraud cases. Just **0.078% of alerts** corresponded to a fraud label. This is a poor balance of detection and review workload and **should not be deployed as-is**.
+
+The recorded-balance indicator is especially tentative: an amount larger than the pre-transaction balance may represent insufficient funds or a simulation artifact, **not fraud**. Thresholds were chosen to demonstrate an interpretable process, not optimized or validated with banking data.
+
+**Business takeaway:** A fraud-monitoring process should be evaluated on **recall, precision, alert rate, and investigation capacity**, not on the number of alerts alone.
+
+## Tableau dashboards
+
+The [published Tableau workbook](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/01-ExecutiveOverview) contains three pages:
+
+**01 — Executive Overview** · Transaction volume and amount, fraud-label KPIs, and comparisons by transaction type.
 
 ![Executive Overview](executive-overview.png)
 
-**02 — Fraud & Risk Monitoring**
+**02 — Fraud & Risk Monitoring** · Rule-alert KPIs, alert activity by simulated hour and type, risk tiers, and score distribution.
 
 ![Fraud & Risk Monitoring](fraud-risk-monitoring.png)
 
-**03 — Transaction Intelligence**
+**03 — Transaction Intelligence** · Transaction mix, amount versus risk score, and transaction amount distribution (histogram limited to amounts ≤ 1 million dataset units).
 
 ![Transaction Intelligence](transaction-intelligence.png)
 
-[Open the interactive Tableau workbook](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/03-TransactionIntelligence)
+The published dashboards use the transaction-level export **`tableau/transactions_dashboard.csv`**. Five additional CSV exports are generated for further analysis; **the existing three dashboard pages do not require five more data-source connections**.
 
-## How I approached it
+## Project workflow
 
-- **Python / Pandas:** load and check transactions, derive relative simulation day and hour, build transaction-level risk indicators, and export summaries for visualization.
-- **Rule-based risk scoring:** assign 2 points for an amount of at least 100,000; add 1 point if the amount exceeds the origin account's pre-transaction balance; add 1 point for TRANSFER or CASH_OUT. Scores of 3 or more trigger a rule alert.
-- **SQL / SQLite:** organize transaction and account data and explore it with joins, aggregations, CTEs, `CASE WHEN`, `HAVING`, and window functions. Seven example queries are in `sql/`.
-- **Tableau:** build three interactive dashboards from the prepared transaction data.
+1. **Validate:** inspect required columns, missing values, and exact duplicates before analysis.
+2. **Explore:** aggregate counts, transaction amounts, and labeled fraud rates by type.
+3. **Score:** apply explicit rule indicators and assign Low / Medium / High review tiers.
+4. **Evaluate:** compare rule alerts with `isFraud`; report caught cases, missed cases, non-fraud-labeled alerts, recall, and precision.
+5. **Cross-check with SQL:** query transaction summaries using SQLite.
+6. **Visualize:** export prepared data and present results in Tableau.
 
-The risk score uses only pre-transaction information for its balance check. The dataset's `isFraud` field is the simulated label; `isFlaggedFraud` is PaySim's own flag; and `rule_alert` is **my separate rule-based indicator**. They are not interchangeable.
+`isFraud` = PaySim's synthetic fraud label; `isFlaggedFraud` = PaySim's pre-existing flag; `rule_alert` = the separate illustrative alert created in this project. **These are not interchangeable.**
 
-## Repository guide
+## Repository files
 
-| File / folder | Purpose |
+| Path | Purpose |
 |---|---|
-| `Banking_Fraud_Intelligence.ipynb` | Main notebook, with analysis and explanations |
-| `src/analysis.py` | Reusable Python analysis pipeline |
-| `sql/` | Seven SQL analysis queries |
-| `requirements.txt` | Python dependencies |
-| `RUN_ME_FIRST.md` | Setup instructions |
-| `TABLEAU_BUILD_GUIDE.md` | Notes on the Tableau dashboard build |
-| `executive-overview.png`, `fraud-risk-monitoring.png`, `transaction-intelligence.png` | Dashboard previews |
-| `tableau/`, `outputs/` | Locally generated exports and results (not required in this repository) |
+| [`Banking_Fraud_Intelligence.ipynb`](Banking_Fraud_Intelligence.ipynb) | Main, executed Python notebook with analysis and interpretations |
+| [`src/analysis.py`](src/analysis.py) | Optional reusable command-line pipeline |
+| [`sql/`](sql/) | Seven example SQL analyses for the command-line pipeline |
+| [`requirements.txt`](requirements.txt) | Python dependencies |
+| [`RUN_ME_FIRST.md`](RUN_ME_FIRST.md) | Local setup steps |
+| [`TABLEAU_BUILD_GUIDE.md`](TABLEAU_BUILD_GUIDE.md) | Description of the finished Tableau dashboards |
+| `executive-overview.png`, `fraud-risk-monitoring.png`, `transaction-intelligence.png` | Dashboard preview images |
+| `data/`, `tableau/`, `outputs/` | Local input and generated files; not committed to Git |
 
-## Run it locally
+The notebook writes six local Tableau CSVs: `transactions_dashboard.csv`, `type_metrics.csv`, `daily_metrics.csv`, `risk_heatmap.csv`, `accounts.csv`, and `transaction_types.csv`. It also creates a local SQLite summary. The small, additional CSVs are prepared outputs, **not independent data sources for the published dashboards**.
 
-1. Download the PaySim CSV from the dataset link above and place it in a local `data/` folder.
-2. Install the dependencies:
+## Run locally
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+Download the [PaySim CSV](https://www.kaggle.com/datasets/ealaxi/paysim1), then place `PS_20174392719_1491204439457_log.csv` at `data/PS_20174392719_1491204439457_log.csv`.
 
-3. Open `Banking_Fraud_Intelligence.ipynb` and run it from the project folder, or run the script:
+```bash
+pip install -r requirements.txt
+jupyter notebook Banking_Fraud_Intelligence.ipynb
+```
 
-   ```bash
-   python src/analysis.py --input "data/PS_20174392719_1491204439457_log.csv" --limit 300000
-   ```
+Run **Restart & Run All** from the repository's root folder. The notebook reads the first **300,000** rows and creates `tableau/` and `outputs/` exports. Connect Tableau Desktop to the generated `tableau/transactions_dashboard.csv` when working with a local copy.
 
-4. Open the generated Tableau exports in Tableau Desktop, or explore the published dashboards above.
+Alternatively, use the separate CLI pipeline, which also runs additional SQL queries:
 
-For a quick run without downloading PaySim, the script also supports `python src/analysis.py --demo`. **Demo results are generated examples and should not be compared with the PaySim figures above.**
+```bash
+python src/analysis.py --input "data/PS_20174392719_1491204439457_log.csv" --limit 300000
+```
 
-## Limitations
+For a quick functionality check without PaySim, `python src/analysis.py --demo` creates a **different, explicitly labeled demo dataset**. Do not compare its results to the PaySim numbers above.
 
-- The dataset is synthetic, and the sample is a nonrandom slice of the original file.
-- PaySim's `step` is a simulated hour, not a calendar date. This extract covers only one derived simulation day, so it cannot support a meaningful day-over-day trend.
-- Risk thresholds are illustrative; they have not been tuned, calibrated, or tested for production use.
-- A rule alert is not a confirmed fraud case, and an account identifier is not necessarily a unique individual.
-- The analysis is a portfolio exercise in transaction monitoring and communication, not a live banking system.
+## Limitations and next steps
 
-**Data source:** [PaySim — Synthetic Financial Datasets for Fraud Detection](https://www.kaggle.com/datasets/ealaxi/paysim1)
+- The sample is **nonrandom and synthetic**, so results must not be generalized to real-world fraud rates.
+- A review alert is **not** evidence of confirmed fraud, and account IDs do not necessarily identify unique individuals.
+- The risk thresholds are illustrative; the rules have not been calibrated, benchmarked, or tested for use in a bank.
+- The first 300,000 rows cover a narrow simulation period, so this extract cannot support meaningful long-term or day-over-day trend conclusions.
+- Next steps would be to test alternative thresholds and better-supported behavior indicators, compare **precision–recall and alert burden**, and validate on appropriate holdout data before considering operational use.
+
+**Project by Tsovinar Harutyunyan · [Live Tableau workbook](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/01-ExecutiveOverview)**
