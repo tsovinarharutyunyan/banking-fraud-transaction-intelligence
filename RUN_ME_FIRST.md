@@ -6,6 +6,6 @@
 4. Run **Kernel → Restart & Run All**. The default is real PaySim, first **300,000 rows** for memory safety.
 5. Verify the `Source:` printout contains `PaySim dataset`, not `DEMO`.
 6. Open Tableau Desktop → Connect → Text file → `tableau/transactions_dashboard.csv`.
-7. Build the 3 dashboard pages with `TABLEAU_BUILD_GUIDE.md`. Save as `.twbx` and publish to Tableau Public only after checking KPI values.
+7. To view the finished dashboards, open the [published Tableau workbook](https://public.tableau.com/app/profile/tsovinar.harutyunyan/viz/BankingFraudTransactionIntelligence/01-ExecutiveOverview). If updating a local Tableau workbook, use **Edit Connection** to point its existing `transactions_dashboard` data source to the new CSV; keep its original field names and confirm KPI values before saving as `.twbx`.
 
 **Do not upload the original PaySim CSV to GitHub.** `data/*.csv` is gitignored. The dataset is synthetic, and risk alerts are illustrative rules rather than confirmed real fraud.
