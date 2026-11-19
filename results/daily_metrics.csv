@@ -1,0 +1,2 @@
+day,transactions,transaction_volume,labeled_fraud,rule_alerts,fraud_rate_pct
+1,300000,52851247926.93,181,112004,0.060333333333333336
